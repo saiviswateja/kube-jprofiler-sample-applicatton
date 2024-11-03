@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: helloworld
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: helloworld
+  template:
+    metadata:
+      labels:
+        app: helloworld
+    spec:
+      volumes:
+        - name: jprofiler
+          emptyDir: {}
+      
+      initContainers:
+        - name: jprofiler-init
+          image: jprofiler
+          imagePullPolicy: Never
+          command: ["/bin/sh", "-c", "cp -R /jprofiler10.1.1/ /jprofiler"]
+          volumeMounts:
+            - name: jprofiler 
+              mountPath: "/jprofiler"
+
+      containers:
+      - name: helloworld-javaopts
+        image: helloworld
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8080
+        - containerPort: 8081
+        env:
+        - name: JAVA_TOOL_OPTIONS
+          value: "-agentpath:/jprofiler/jprofiler10.1.1/bin/linux-aarch64/libjprofilerti.so=port=8081"
+        volumeMounts:
+          - name: jprofiler
+            mountPath: "/jprofiler"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: helloworld
+spec:
+  ports:
+    - name: http
+      port: 80         # Exposes service on port 80
+      targetPort: 8080 # Maps to container's 8080
+    - name: other-port
+      port: 81         # Exposes service on port 81
+      targetPort: 8081 # Maps to container's 8081
+  selector:
+    app: helloworld
+
+
+# kubectl port-forward com-manh-cp-shipmenttracking-5f568bbcbb-9nq64 8086:8082
