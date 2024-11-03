@@ -1,20 +1,14 @@
-FROM centos:7
+# Use an official Java JDK image as a parent image
+FROM openjdk:11-jdk-slim
 
-# Switch to root
-USER 0
+# Set the working directory
+WORKDIR /app
 
-ENV \
-JPROFILER_DISTRO="jprofiler_linux_10_1_1.tar.gz" \
-STAGING_DIR="/jprofiler-staging" \
-HOME="/jprofiler10.1.1"
+# Copy the Java file into the container
+COPY HelloWorld.java .
 
-LABEL \
-io.k8s.display-name="JProfiler from ${JPROFILER_DISTRO}"
+# Compile the Java application
+RUN javac HelloWorld.java
 
-# Install epel-release and required packages
-RUN curl -v -OL "https://download.ej-technologies.com/jprofiler/${JPROFILER_DISTRO}" -H "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.62 Safari/537.36" \
-&& tar -xzf ${JPROFILER_DISTRO} \
-&& rm -f ${JPROFILER_DISTRO} \
-&& chmod -R 0775 ${HOME}
-
-# WORKDIR ${HOME}
+# Run the application
+CMD ["java", "HelloWorld"]
